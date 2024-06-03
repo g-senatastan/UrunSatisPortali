@@ -1,0 +1,110 @@
+﻿
+@{
+    ViewData["Title"] = "GetProducts";
+}
+
+<h1>Ürünler</h1>
+<div class="row">
+    <div class="col-md-12">
+        
+        <table class="table  table-hover" id="tbProductList">
+            <thead>
+                <tr>
+
+
+                    
+                    <th>Marka</th> 
+                    <th>Ürün Adı</th>
+                    <th>Açıklama</th>
+                    <th>Fiyat</th>
+                    <th>Durum</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            </tbody>
+        </table>
+        </div>
+        
+
+
+    </div>
+
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            var ApiBaseUrl = "@ViewBag.ApiBaseUrl";
+            
+
+            ProductList();
+
+            function ProductList() {
+                $.ajax({
+                    url: ApiBaseUrl + "Products",
+                    method: "GET",
+                    contentType: "application/json",
+                    success: function (data) {
+                        ProductListToTable(data);
+                    },
+                    error: function () {
+                        console.error("Ürün listesi alınırken hata oluştu");
+                    }
+                });
+            }
+
+            function ProductListToTable(data) {
+                $("#tbProductList tbody").empty();
+                var tr = '';
+                $.each(data, function (i, item) {
+                    var bg = item.isActive ? 'bg-success' : 'bg-danger';
+
+                    tr += '<tr>';
+                    tr += '<td>' + item.brandName + '</td>';
+                    tr += '<td>' + item.name + '</td>';
+                    tr += '<td>' + item.description + '</td>';
+                    tr += '<td>' + item.price + '</td>';
+                    tr += '<td><span class="badge ' + bg + '">' + (item.isActive ? 'Aktif' : 'Pasif') + '</span></td>';
+
+                    if (item.isActive) {
+                        tr += '<td><a href="#" class="btn btn-outline-primary btn-sm sepeteekle" data-productid="' + item.id + '">Sepete Ekle<i class="fa fa-shopping-basket"></i></a></td>';
+                    } else {
+                        tr += '<td></td>';
+                    }
+
+                    tr += '</tr>';
+                });
+
+                $("#tbProductList tbody").append(tr);
+            }
+
+            $(document).on("click", ".sepeteekle", function (e) {
+                var userId = "";
+                var productId = $(this).data("productid");
+                var shoppingCart = {
+                    ProductId: productId,
+                    Quantity: 1,
+                    userId: userId
+                };
+
+                $.ajax({
+                    url: ApiBaseUrl + "ShoppingCart",
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    },
+                    contentType: "application/json",
+                    data: JSON.stringify(shoppingCart),
+                    success: function (response) {
+                        alert(response.message);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(xhr.responseText);
+                        alert("Ürün sepete eklenirken bir hata oluştu. Lütfen tekrar deneyin.");
+                    }
+                });
+            });
+        });
+    </script>
+}
